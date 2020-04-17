@@ -1,21 +1,47 @@
-$(document).ready(function() {
-  // $("#submit").html("Submit Request");
-});
+$(document).ready(function () {});
+// Listen for form submit
+document.getElementById("contactForm").addEventListener("submit", submitForm);
 
 var database = firebase.database();
 var storageRef = firebase.storage().ref();
 var uploadsRef = storageRef.child("sponsor-uploads");
+// GLobal variable to enforce reCAPTCHA
+var isAuthorized = false;
 
-// Listen for form submit
-document.getElementById("contactForm").addEventListener("submit", submitForm);
+function dataCallback(response) {
+  return new Promise(function (resolve, reject) {
+    var checkRecaptcha = firebase.functions().httpsCallable("checkRecaptcha");
+    // console.log(response);
+    checkRecaptcha({ response: encodeURIComponent(response) })
+      .then((result) => {
+        // console.log(result);
+        const data = result["data"];
+        if (data.success === true) isAuthorized = true;
+        resolve();
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  });
+}
+
+function dataExpiredCallback() {
+  console.log("dataExpiredCallback");
+}
 
 // Submit form
 function submitForm(e) {
   e.preventDefault();
+
+  if (!isAuthorized) {
+    $("#recaptchaModal").modal("show");
+    return;
+  }
+
   var name, email, message;
   // Make sure input is given
   if ($("#name").val() == "" || $("#email").val() == "" || $("#message").val() == "") {
-    $("#staticBackdrop").modal("show");
+    $("#missingInformationModal").modal("show");
     return;
   } else {
     name = $("#name").val();
@@ -32,9 +58,9 @@ function submitForm(e) {
   if ($("#fileInput").val() != "") {
     var file = document.getElementById("fileInput").files[0];
     var metadata = {
-      contentType: "application/octet-stream"
+      contentType: "application/octet-stream",
     };
-    uploadFile(file, metadata, function(url) {
+    uploadFile(file, metadata, function (url) {
       pushToDatabase(name, email, message, url);
       document.getElementById("fileLabel").innerHTML = "";
     });
@@ -44,10 +70,11 @@ function submitForm(e) {
   }
 
   // Reset UI
-  setTimeout(function() {
+  setTimeout(function () {
+    grecaptcha.reset();
     updateSubmitButton("btn-success", "btn-brown", "Success!");
     document.getElementById("contactForm").reset();
-    setTimeout(function() {
+    setTimeout(function () {
       updateSubmitButton("btn-brown", "btn-success", "Submit Request");
     }, 2000);
   }, 1000);
@@ -65,7 +92,7 @@ function uploadFile(file, metadata, onSuccess) {
   // Listen for state changes, errors, and completion of the upload.
   uploadTask.on(
     firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
-    function(snapshot) {
+    function (snapshot) {
       // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
       var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
       console.log("Upload is " + progress + "% done");
@@ -78,15 +105,15 @@ function uploadFile(file, metadata, onSuccess) {
           break;
       }
     },
-    function(error) {
+    function (error) {
       // A full list of error codes is available at
       // https://firebase.google.com/docs/storage/web/handle-errors
       switch (error.code) {
       }
     },
-    function() {
+    function () {
       // Upload completed successfully, now we can get the download URL
-      uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
+      uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
         // console.log("File available at", downloadURL);
         onSuccess(downloadURL);
       });
@@ -97,31 +124,25 @@ function uploadFile(file, metadata, onSuccess) {
 // Function to push data to real-time firebase database
 function pushToDatabase(name, email, message, fileURL) {
   let date = getDate();
-  firebase
-    .database()
-    .ref("requests/")
-    .push({
-      name: name,
-      email: email,
-      message: message,
-      file: fileURL,
-      date: date
-    });
+  firebase.database().ref("requests/").push({
+    name: name,
+    email: email,
+    message: message,
+    file: fileURL,
+    date: date,
+  });
   // console.log("Successfully updated database.");
 }
 
 // Function to push data to real-time firebase database
 function pushToDatabase(name, email, message) {
   let date = getDate();
-  firebase
-    .database()
-    .ref("requests/")
-    .push({
-      name: name,
-      email: email,
-      message: message,
-      date: date
-    });
+  firebase.database().ref("requests/").push({
+    name: name,
+    email: email,
+    message: message,
+    date: date,
+  });
   // console.log("Successfully updated database.");
 }
 
