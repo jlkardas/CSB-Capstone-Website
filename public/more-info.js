@@ -44,6 +44,9 @@ var db = firebase.firestore();
 var storageRef = firebase.storage().ref();
 var uploadsRef = storageRef.child("sponsor-uploads"); // point to /sponsor-uploads directory
 
+// Constant variable that specifies who the email should be sent to
+const sendTo = "jlkardas@gmail.com";
+
 // Submit form
 function submitForm() {
   var name, email, message;
@@ -142,7 +145,7 @@ function uploadFile(file, metadata, onSuccess) {
 function pushToDatabase(name, email, message) {
   var date = getDate();
   var document = {
-    to: "jlkardas@gmail.com",
+    to: sendTo,
     message: {
       subject: "New CSB Capstone Request",
       html:
@@ -173,7 +176,7 @@ function pushToDatabaseWithFile(name, email, message, fileURL) {
   let date = getDate();
   db.collection("requests")
     .add({
-      to: "jlkardas@gmail.com",
+      to: sendTo,
       message: {
         subject: "New CSB Capstone Request",
         html:
