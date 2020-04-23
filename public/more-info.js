@@ -47,8 +47,13 @@ var uploadsRef = storageRef.child("sponsor-uploads"); // point to /sponsor-uploa
 // Submit form
 function submitForm() {
   var name, email, message;
+  var testEmail = /^[A-Z0-9._%+-]+@([A-Z0-9-]+\.)+[A-Z]{2,4}$/i;
+
   // Make sure input is given
   if (!$("#name").val() || !$("#email").val() || !$("#message").val()) {
+    return;
+  } else if (!testEmail.test($("#email").val())) {
+    $("#email").addClass("is-invalid");
     return;
   } else {
     name = $("#name").val();
@@ -81,12 +86,13 @@ function submitForm() {
   // $(this)[0].reset();
   setTimeout(function () {
     grecaptcha.reset();
+    $("#email").removeClass("is-invalid");
+    $("#contactForm").removeClass("was-validated");
     document.getElementById("contactForm").reset();
     updateSubmitButton("btn-success", "btn-brown", "Success!");
     setTimeout(function () {
       updateSubmitButton("btn-brown", "btn-success", "Submit Request");
       $("#submit").prop("disabled", true);
-      $("#contactForm").removeClass("was-validated");
     }, 1000);
   }, 2000);
 }
@@ -140,13 +146,13 @@ function pushToDatabase(name, email, message) {
     message: {
       subject: "New CSB Capstone Request",
       html:
-        "<div class=”body”>Name: " +
+        "<div class=”body”><b>Name:</b> " +
         name +
-        "<br>Email: " +
+        "<br><b>Email:</b> " +
         email +
-        "<br>Message: " +
+        "<br><b>Message:</b> " +
         message +
-        "<br>Date: " +
+        "<br><b>Date:</b> " +
         date +
         "</div>",
     },
@@ -171,15 +177,15 @@ function pushToDatabaseWithFile(name, email, message, fileURL) {
       message: {
         subject: "New CSB Capstone Request",
         html:
-          "<div class=”body”>Name: " +
+          "<div class=”body”><b>Name:</b> " +
           name +
-          "<br>Email: " +
+          "<br><b>Email:</b> " +
           email +
-          "<br>Message: " +
+          "<br><b>Message:</b> " +
           message +
-          "<br>File Upload: " +
+          "<br><b>File Upload:</b> " +
           fileURL +
-          "<br>Date: " +
+          "<br><b>Date:</b> " +
           date +
           "</div>",
       },
