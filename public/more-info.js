@@ -45,7 +45,7 @@ var storageRef = firebase.storage().ref();
 var uploadsRef = storageRef.child("sponsor-uploads"); // point to /sponsor-uploads directory
 
 // Constant variable that specifies who the email should be sent to
-const sendTo = "jlkardas@gmail.com";
+const sendTo = "gsw2@lehigh.edu";
 
 // Submit form
 function submitForm() {
