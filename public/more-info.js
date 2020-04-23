@@ -1,5 +1,6 @@
 $(document).ready(function () {
-  // Update text label to file name when new file is uplaoded
+  // Update text label to file name when new file is uplaoded'
+  $("#submit").prop("disabled", true);
   $("#fileInput").on("change", function () {
     var fileName = $(this).val().replace("C:\\fakepath\\", "");
     $(this).next(".custom-file-label").html(fileName);
@@ -77,9 +78,6 @@ function submitForm() {
     pushToDatabase(name, email, message);
   }
 
-  // Reset reCAPTCHA
-  $("#contactForm").find("*").prop("was-validated", "");
-
   // $(this)[0].reset();
   setTimeout(function () {
     grecaptcha.reset();
@@ -87,11 +85,10 @@ function submitForm() {
     updateSubmitButton("btn-success", "btn-brown", "Success!");
     setTimeout(function () {
       updateSubmitButton("btn-brown", "btn-success", "Submit Request");
+      $("#submit").prop("disabled", true);
+      $("#contactForm").removeClass("was-validated");
     }, 1000);
   }, 2000);
-  setTimeout(() => {
-    $(this).attr("class", "needs-validation");
-  }, 1); //timeout allows for 'was-validated' to be added then removed.
 }
 
 function updateSubmitButton(addClass, removeClass, html) {
@@ -203,8 +200,7 @@ function dataCallback(response) {
     checkRecaptcha({ response: encodeURIComponent(response) })
       .then((result) => {
         if (result["data"].success === true) {
-          console.log("Submit enabled");
-          $("#submit").removeAttr("disabled");
+          $("#submit").prop("disabled", false);
         }
         resolve();
       })
